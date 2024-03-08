@@ -538,7 +538,11 @@ ABSTRACT_TYPE(/datum/trait/job)
 	desc = "Subject is trained in cultural and psychological matters."
 	id = "training_chaplain"
 
+#ifdef BONUS_POINTS
+	var/faith = 1000000
+#else
 	var/faith = FAITH_STARTING
+#endif
 	///multiplier for faith gain only - faith losses ignore this
 	var/faith_mult = 1
 
