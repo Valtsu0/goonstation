@@ -29,6 +29,7 @@ export const Wizard_Spellbook = (props, context) => {
       fontSize={2}
       height={600}
       width={500}
+      theme="wizard"
     >
       <Window.Content>
         <Section title={owner_name+"'s Spellbook "}>
