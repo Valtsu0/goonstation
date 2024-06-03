@@ -272,7 +272,7 @@
 		return " It's saved a total of [round(total_score)] points, with [round(round_score)] points added today."
 
 	proc/update_totals()
-		tracker.maptext = "<span class='c vt ps2p sh'>TOTAL [add_lspace(round(total_score), 7)]\nROUND [add_lspace(round(round_score), 7)]</span>"
+		tracker.maptext = "<span class='c vt ps2p sh'>TOTAL [add_leading(round(total_score), 7)]\nROUND [add_leading(round(round_score), 7)]</span>"
 
 
 	attackby(obj/item/W, mob/user)
@@ -1526,12 +1526,7 @@ Read the rules, don't grief, and have fun!</div>"}
 			src.maptext_width = 600
 			src.maptext_height = 400
 			update_text() // kick start
-
-		proc/do_loop()
-			set waitfor = FALSE
-			while (update_delay)
-				update_text()
-				sleep(update_delay)
+			RegisterSignal(get_singleton(/datum/cross_server_message/server_sync_response), COMSIG_SERVER_DATA_SYNCED, PROC_REF(update_text))
 
 		proc/update_text()
 			var/serverList = ""
