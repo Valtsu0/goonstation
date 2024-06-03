@@ -1445,6 +1445,7 @@ var/datum/preMapLoad/preMapLoad = new
 #include "code\modules\materials\Mat_Properties.dm"
 #include "code\modules\materials\Mat_RawMaterials.dm"
 #include "code\modules\materials\Mat_Recipes.dm"
+#include "code\modules\materials\Mat_Weapons.dm"
 #include "code\modules\mechanics\MechanicMadness.dm"
 #include "code\modules\mechanics\MechanicMC14500.dm"
 #include "code\modules\mechanics\MechanicsNetworkCon.dm"
