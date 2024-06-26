@@ -10,6 +10,9 @@
 	var/next_y = 0
 	var/previous_x = 0
 	var/previous_y = 0
+
+	//var/inhand_next = [[[0, 0], [0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0], [0, 0]]] // is this really the most sane way to do this?
+
 	color = "#ffffff"
 
 	New()
@@ -33,9 +36,10 @@
 
 
 /obj/item/weapon_part/handle
-	var/image/shaftImg = null
-	var/image/headImg = null
+	var/list/inhand_overlays_l = list()
+	var/list/inhand_overlays_r = list()
 	var/obj/item/weapon_part/head/head
+
 	proc/buildOverlays()
 		overlays.Cut()
 		var/image/imgShaft = image(src.icon, icon_state = src.icon_state)
@@ -43,7 +47,6 @@
 		imgShaft.alpha = src.material.getAlpha()
 		imgShaft.appearance_flags = RESET_ALPHA | RESET_COLOR
 		overlays += imgShaft
-		shaftImg = imgShaft
 		if(head)
 			var/image/imgHead = image(src.icon, icon_state = src.head.icon_state)
 			imgHead.color = head.material.getColor()
@@ -52,11 +55,16 @@
 			imgHead.pixel_x = src.next_x - head.previous_x
 			imgHead.pixel_y = src.next_y - head.previous_y
 			overlays += imgHead
-			headImg = imgHead
-
-			src.inhand_image.overlays += image('icons/mob/inhand/hand_matsciweapons.dmi')
 		return
 
+/obj/item/weapon_part/handle/update_inhand(hand, hand_offset)
+	..()
+	if (hand == "R")
+		inhand_image.overlays += image('icons/mob/inhand/hand_matsciweapons.dmi', "head_dagger-R")
+		inhand_image.overlays -= image('icons/mob/inhand/hand_matsciweapons.dmi', "head_dagger-L")
+	else
+		inhand_image.overlays += image('icons/mob/inhand/hand_matsciweapons.dmi', "head_dagger-L")
+		inhand_image.overlays -= image('icons/mob/inhand/hand_matsciweapons.dmi', "head_dagger-R")
 
 /obj/item/weapon_part/handle/small
 	name = "Small handle"
