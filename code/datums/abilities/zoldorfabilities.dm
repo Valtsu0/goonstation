@@ -43,25 +43,28 @@
 	cooldown = 100
 
 	//backups just in case the fortune generation pools changed since 2016
-	var/list/fortune_mystical
-	var/list/fortune_nouns
-	var/list/fortune_verbs
-	var/list/fortune_adjectives
-	var/list/fortune_read
-	var/list/sentencesShort
+	var/list/fortune_strings = list()
 	//other zoldorf fortune information
+	var/regex/parser_regex
 
 	New()
-		src.fortune_mystical = strings("zoldorf.txt", "mystical")
-		src.fortune_nouns = strings("zoldorf.txt", "nouns")
-		src.fortune_verbs = strings("zoldorf.txt", "verbs")
-		src.fortune_adjectives = strings("zoldorf.txt", "adjectives")
-		src.fortune_read = strings("zoldorf.txt", "read")
-		src.sentencesShort = strings("zoldorf.txt", "sentences")
+		src.parser_regex = regex(@"(\(.*?\))")
 		..()
 
+	proc/getStrings(var/category)
+		if (!(category in src.fortune_strings))
+			src.fortune_strings[category] = strings("zoldorf.txt", category)
+			sortList(src.fortune_strings[category], /proc/cmp_text_asc)
+		return src.fortune_strings[category]
+
+	proc/ZoldorfParser(var/string)
+		if (!src.parser_regex.Find(string))
+			return string
+		var/category = copytext(src.parser_regex.match, 2, -1)
+		var/result = tgui_input_list(usr, src.parser_regex.Replace(string, "______"), category, src.getStrings(category))
+		return src.ZoldorfParser(src.parser_regex.Replace(string, result))
+
 	cast(atom/target)
-		var/sentenceStructure
 		var/sentence
 		var/speechinput
 		var/list/sentences = list()
@@ -77,32 +80,26 @@
 		var/obj/machinery/playerzoldorf/pz = user.loc
 		var/list/zoldorflist = list(SPAN_NOTICE("[pz] makes a mystical gesture!</b>"),SPAN_NOTICE("[pz] rocks back and forth!"))
 		if((user.abilityHolder.points <= 3)&&(user.abilityHolder.points > 0))
-			maxlines = user.abilityHolder.points
+			maxlines = user.abilityHolder.points + 3
 		else if(user.abilityHolder.points > 3)
-			maxlines = 3
+			maxlines = 6
 		else if(user.abilityHolder.points == 0)
-			maxlines = 1
+			maxlines = 3
 
 		pz.UpdateOverlays(image('icons/obj/zoldorf.dmi',"fortunetelling"),"fortunetelling")
-		sortList(fortune_mystical, /proc/cmp_text_asc)
-		sortList(fortune_nouns, /proc/cmp_text_asc)
-		fortune_nouns.Add("[holder.owner]")
-		sortList(fortune_verbs, /proc/cmp_text_asc)
-		sortList(fortune_adjectives, /proc/cmp_text_asc)
-		sortList(sentencesShort, /proc/cmp_text_asc)
 
 		pz.visible_message(SPAN_NOTICE("[pz] wakes up!"))
 		playsound(pz.loc, 'sound/machines/fortune_riff.ogg', 60, 1)
 
 		if(user.firstfortune == 1)
-			speechinput = input("Which titles would you like? (i.e. 'great and powerful')", "Adjective", null) as null|anything in fortune_adjectives
+			speechinput = tgui_input_list(usr, "Which titles would you like? (i.e. 'great and powerful')", "Adjective", src.getStrings("adjective"))
 			if(speechinput)
 				user.fortunemessage += "The [speechinput] and "
 			else
 				user.fortunemessage = null
 				pz.ClearSpecificOverlays("fortunetelling")
 				return 1
-			speechinput = input("Which titles would you like? (i.e. 'great and powerful')", "Adjective", null) as null|anything in fortune_adjectives
+			speechinput = tgui_input_list(usr, "Which titles would you like? (i.e. 'great and powerful')", "Adjective", src.getStrings("adjective"))
 			if(speechinput)
 				user.fortunemessage += "[speechinput]"
 			else
@@ -113,112 +110,7 @@
 
 		//add sentences to a list to support multiple lines
 		for(var/i=1,i<=maxlines,i++)
-			sentenceStructure = input("Which sentence structure would you like?", "Sentence", null) as null|anything in sentencesShort
-			if(!sentenceStructure)
-				pz.ClearSpecificOverlays("fortunetelling")
-				break
-			switch(sentenceStructure)
-				if("You shall soon...")
-					sentence += "You shall soon "
-					speechinput = input("You shall soon (verb) the (adjective) (noun).", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] the "
-					speechinput = input("[sentence](adjective) (noun).", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](noun).", "Noun", null) as null|anything in fortune_nouns
-					if(!speechinput) break
-					sentence += "[speechinput]."
-				if("But beware...")
-					sentence += "But beware, lest the "
-					speechinput = input("But beware, lest the (adjective) (noun) (verb) you!", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](noun) (verb) you!", "Noun", null) as null|anything in fortune_nouns
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](verb) you!", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] you!"
-				if("But take heed...")
-					sentence += "But take heed, for the "
-					speechinput = input("But take heed, for the (adjective) (noun) might (verb) you!", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](noun) might (verb) you!", "Noun", null) as null|anything in fortune_nouns
-					if(!speechinput) break
-					sentence += "[speechinput] might "
-					speechinput = input("[sentence](verb) you!", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] you!"
-				if("But rejoice...")
-					sentence += "But rejoice, for the "
-					speechinput = input("But rejoice, for the (adjective) (noun) shall (verb) you!", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](noun) shall (verb) you!", "Noun", null) as null|anything in fortune_nouns
-					if(!speechinput) break
-					sentence += "[speechinput] shall "
-					speechinput = input("[sentence](verb) you!", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] you!"
-				if("Seek the...")
-					sentence += "Seek the "
-					speechinput = input("Seek the (mystical) of the (adjective) (noun) and (verb) yourself.", "Mystical", null) as null|anything in fortune_mystical
-					if(!speechinput) break
-					sentence += "[speechinput] of the "
-					speechinput = input("[sentence](adjective) (noun) and (verb) yourself.", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](noun) and (verb) yourself.", "Noun", null) as null|anything in fortune_nouns
-					if(!speechinput) break
-					sentence += "[speechinput] and "
-					speechinput = input("[sentence](verb) yourself.", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] yourself."
-				if("Remember to...")
-					sentence += "Remember to "
-					speechinput = input("Remember to (verb) the (adjective) (noun) and you will surely (verb) your (adjective) (mystical).", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] the "
-					speechinput = input("[sentence](adjective) (noun) and you will surely (verb) your (adjective) (mystical).", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](noun) and you will surely (verb) your (adjective) (mystical).", "Noun", null) as null|anything in fortune_nouns
-					if(!speechinput) break
-					sentence += "[speechinput] and you will surely "
-					speechinput = input("[sentence](verb) your (adjective) (mystical).", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] your "
-					speechinput = input("[sentence](adjective) (mystical).", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](mystical).", "Mystical", null) as null|anything in fortune_mystical
-					if(!speechinput) break
-					sentence += "[speechinput]."
-				if("You must...")
-					sentence += "You must "
-					speechinput = input("You must (verb) the (adjective) (noun) or the (noun) will surely (verb) your (adjective) (mystical).", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] the "
-					speechinput = input("[sentence](adjective) (noun) or the (noun) will surely (verb) your (adjective) (mystical).", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](noun) or the (noun) will surely (verb) your (adjective) (mystical).", "Noun", null) as null|anything in fortune_nouns
-					if(!speechinput) break
-					sentence += "[speechinput] or the "
-					speechinput = input("[sentence](noun) will surely (verb) your (adjective) (mystical).", "Noun", null) as null|anything in fortune_nouns
-					if(!speechinput) break
-					sentence += "[speechinput] will surely "
-					speechinput = input("[sentence](verb) your (adjective) (mystical).", "Verb", null) as null|anything in fortune_verbs
-					if(!speechinput) break
-					sentence += "[speechinput] your "
-					speechinput = input("[sentence](adjective) (mystical).", "Adjective", null) as null|anything in fortune_adjectives
-					if(!speechinput) break
-					sentence += "[speechinput] "
-					speechinput = input("[sentence](mystical).", "Mystical", null) as null|anything in fortune_mystical
-					if(!speechinput) break
-					sentence += "[speechinput]."
+			sentence = ZoldorfParser("(sentence)")
 			if(sentence)
 				boutput(holder.owner, SPAN_SUCCESS("[sentence]"))
 				sentences.Add(sentence)
@@ -230,7 +122,7 @@
 		if(!sentences.len)
 			return 1
 		infothing = "<font face='System' size='3'><center>YOUR FORTUNE</center><br><br>\
-		[user.fortunemessage] [holder.owner] has [pick(fortune_read)] your [pick(fortune_mystical)]!<br><br>"
+		[user.fortunemessage] [holder.owner] has [pick(src.getStrings("read"))] your [pick(src.getStrings("mystical"))]!<br><br>"
 		for(var/i=1,i<=sentences.len,i++)
 			infothing += sentences[i]
 			infothing += "<br><br>"
