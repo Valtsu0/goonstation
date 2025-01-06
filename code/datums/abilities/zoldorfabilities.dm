@@ -57,12 +57,21 @@
 			sortList(src.fortune_strings[category], /proc/cmp_text_asc)
 		return src.fortune_strings[category]
 
-	proc/ZoldorfParser(var/string)
-		if (!src.parser_regex.Find(string))
-			return string
-		var/category = copytext(src.parser_regex.match, 2, -1)
-		var/result = tgui_input_list(usr, src.parser_regex.Replace(string, "______"), category, src.getStrings(category))
-		return src.ZoldorfParser(src.parser_regex.Replace(string, result))
+	proc/ZoldorfParser(var/string, var/max_loops=20)
+		while (max_loops)
+			max_loops--
+			if (!src.parser_regex.Find(string))
+				return string
+			var/category = copytext(src.parser_regex.match, 2, -1)
+			if (findtext(category, "/"))
+				category = tgui_input_list(usr, src.parser_regex.Replace(string, "______"), "Choose a category", splittext(category, "/"))
+
+			var/result
+			if (category == "number")
+				result = get_english_num(tgui_input_number(usr, src.parser_regex.Replace(string, "______"), "number", 1, 999999, 0))
+			else
+				result = tgui_input_list(usr, src.parser_regex.Replace(string, "______"), category, src.getStrings(category))
+			string = src.parser_regex.Replace(string, result)
 
 	cast(atom/target)
 		var/sentence
