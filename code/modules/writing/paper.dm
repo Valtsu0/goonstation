@@ -484,6 +484,61 @@
 		[sentence_1]... [sentence_2]! [sentence_3].</font>"}
 		return ..() // moving the
 
+/obj/item/paper/thermal/inventory
+	name = "armory inventory"
+	desc = "A list of armory contents."
+	info = "<center><h1>Armory Inventory</center>"
+	var/area_type = /area/station/ai_monitored/armory
+
+	New()
+		var/area = get_area_by_type(src.area_type)
+
+		var/contents = alist()
+		for(var/obj/item/O in area)
+			contents[get_item_text(O, 0)] += 1
+		for(var/text in contents)
+			src.info += replacetext(text, "%count%", (( contents[text] > 1) ? " x[contents[text]]" : ""))
+
+		info += "<br><center>Crates</center><br>"
+		contents = alist()
+		for(var/obj/storage/O in area)
+			contents[get_item_text(O, 0)] += 1
+		for(var/text in contents)
+			src.info += replacetext(text, "%count%", (( contents[text] > 1) ? " x[contents[text]]" : ""))
+
+		info += "<br><center>Other</center><br>"
+		contents = alist()
+		for(var/obj/machinery/weapon_stand/O in area)
+			contents[get_item_text(O, 0)] += 1
+		for(var/obj/machinery/vending/O in area)
+			contents[get_item_text(O, 0)] += 1
+		for(var/obj/machinery/portable_atmospherics/O in area)
+			contents[get_item_text(O, 0)] += 1
+		for(var/text in contents)
+			src.info += replacetext(text, "%count%", (( contents[text] > 1) ? " x[contents[text]]" : ""))
+
+		return ..()
+
+	proc/get_item_text(item, depth)
+		var/item_text = ""
+		for (var/i = 0, i<depth, i++)
+			item_text += "--"
+		item_text += " [item:name]%count%<br>"
+		var/contents = alist()
+		if (istype(item, /obj/storage) || istype(item, /obj/item/storage))
+			for(var/O in item:contents)
+				contents[get_item_text(O, depth + 1)] += 1
+			for(var/O in item:spawn_contents)
+				contents[get_item_text(O, depth + 1)] += item:spawn_contents[O]
+		if (ispath(item, /obj/storage) || ispath(item, /obj/item/storage))
+			for(var/O in item:contents)
+				contents[get_item_text(O, depth + 1)] += 1
+			for(var/O in initial(item:spawn_contents))
+				contents[get_item_text(O, depth + 1)] += item:spawn_contents[O]
+		for(var/text in contents)
+			item_text += replacetext(text, "%count%", (( contents[text] > 1) ? " x[contents[text]]" : ""))
+		return item_text
+
 // PHOTOGRAPH
 
 /obj/item/paper/photograph
