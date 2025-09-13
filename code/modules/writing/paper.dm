@@ -489,6 +489,7 @@
 	desc = "A list of armory contents."
 	info = "<center><h1>Armory Inventory</center>"
 	var/area_type = /area/station/ai_monitored/armory
+	var/test
 
 	New()
 		var/area = get_area_by_type(src.area_type)
@@ -531,6 +532,9 @@
 			for(var/O in item:spawn_contents)
 				contents[get_item_text(O, depth + 1)] += item:spawn_contents[O]
 		if (ispath(item, /obj/storage) || ispath(item, /obj/item/storage))
+			if (!src.test)
+				src.test = item:spawn_contents
+			var/list/test1 = item:spawn_contents
 			for(var/O in item:contents)
 				contents[get_item_text(O, depth + 1)] += 1
 			for(var/O in initial(item:spawn_contents))
