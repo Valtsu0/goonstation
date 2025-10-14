@@ -489,7 +489,6 @@
 	desc = "A list of armory contents."
 	info = "<center><h1>Armory Inventory</center>"
 	var/area_type = /area/station/ai_monitored/armory
-	var/test
 
 	New()
 		var/area = get_area_by_type(src.area_type)
@@ -524,21 +523,19 @@
 		var/item_text = ""
 		for (var/i = 0, i<depth, i++)
 			item_text += "--"
-		item_text += " [item:name]%count%<br>"
 		var/contents = alist()
 		if (istype(item, /obj/storage) || istype(item, /obj/item/storage))
+			item_text += " [item:name]%count%<br>"
 			for(var/O in item:contents)
 				contents[get_item_text(O, depth + 1)] += 1
 			for(var/O in item:spawn_contents)
 				contents[get_item_text(O, depth + 1)] += item:spawn_contents[O]
 		if (ispath(item, /obj/storage) || ispath(item, /obj/item/storage))
-			if (!src.test)
-				src.test = item:spawn_contents
-			var/list/test1 = item:spawn_contents
-			for(var/O in item:contents)
+			item_text += " [item:name]%count%<br>"
+			for(var/O in item::contents)
 				contents[get_item_text(O, depth + 1)] += 1
-			for(var/O in initial(item:spawn_contents))
-				contents[get_item_text(O, depth + 1)] += item:spawn_contents[O]
+			for(var/O in item::spawn_contents)
+				contents[get_item_text(O, depth + 1)] += item::spawn_contents[O]
 		for(var/text in contents)
 			item_text += replacetext(text, "%count%", (( contents[text] > 1) ? " x[contents[text]]" : ""))
 		return item_text
