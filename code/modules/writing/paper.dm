@@ -524,21 +524,32 @@
 		for (var/i = 0, i<depth, i++)
 			item_text += "--"
 		var/contents = alist()
+
+		// handle instance
 		if (istype(item, /obj/storage) || istype(item, /obj/item/storage))
 			item_text += " [item:name]%count%<br>"
-			for(var/O in item:contents)
-				contents[get_item_text(O, depth + 1)] += 1
-			for(var/O in item:spawn_contents)
-				contents[get_item_text(O, depth + 1)] += item:spawn_contents[O]
-		if (ispath(item, /obj/storage) || ispath(item, /obj/item/storage))
-			item_text += " [item:name]%count%<br>"
-			for(var/O in item::contents)
-				contents[get_item_text(O, depth + 1)] += 1
-			for(var/O in item::spawn_contents)
-				contents[get_item_text(O, depth + 1)] += item::spawn_contents[O]
+			contents = get_item_text_helper(item:contents, item:spawn_contents, depth)
+
+		// handle path
+		else if (ispath(item, /obj/storage))
+			var/obj/storage/path = item
+			item_text += " [initial(path.name)]%count%<br>"
+			contents = get_item_text_helper(initial(path.contents), initial(path.spawn_contents), depth)
+		else if (ispath(item, /obj/item/storage))
+			var/obj/item/storage/path = item
+			item_text += " [initial(path.name)]%count%<br>"
+			contents = get_item_text_helper(initial(path.contents), initial(path.spawn_contents), depth)
+
 		for(var/text in contents)
 			item_text += replacetext(text, "%count%", (( contents[text] > 1) ? " x[contents[text]]" : ""))
 		return item_text
+
+	proc/get_item_text_helper(contents, spawn_contents, depth)
+		. = alist()
+		for(var/O in contents)
+			.[get_item_text(O, depth + 1)] += 1
+		for(var/O in spawn_contents)
+			.[get_item_text(O, depth + 1)] += spawn_contents[O]
 
 // PHOTOGRAPH
 
