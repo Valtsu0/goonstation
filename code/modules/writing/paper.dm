@@ -526,20 +526,22 @@
 			item_text += "--"
 		var/contents = alist()
 
-		// handle instance
-		if (istype(item, /obj/storage) || istype(item, /obj/item/storage))
-			item_text += " [item:name]%count%<br>"
-			contents = get_item_text_helper(item:contents, item:spawn_contents, depth)
-
 		// handle path
-		else if (ispath(item, /obj/storage))
-			var/obj/storage/path = item
-			item_text += " [initial(path.name)]%count%<br>"
-			contents = get_item_text_helper(initial(path.contents), initial(path.spawn_contents), depth)
-		else if (ispath(item, /obj/item/storage))
-			var/obj/item/storage/path = item
-			item_text += " [initial(path.name)]%count%<br>"
-			contents = get_item_text_helper(initial(path.contents), initial(path.spawn_contents), depth)
+		if (ispath(item))
+			var/obj/name_path = item
+			item_text += " [initial(name_path.name)]%count%<br>"
+			if (ispath(item, /obj/storage))
+				var/obj/storage/path = item
+				contents = get_item_text_helper(initial(path.contents), initial(path.spawn_contents), depth)
+			else if (ispath(item, /obj/item/storage))
+				var/obj/item/storage/path = item
+				contents = get_item_text_helper(initial(path.contents), initial(path.spawn_contents), depth)
+
+		// handle instance
+		else if (istype(item, /obj)) // BUG: counts both normal and spawn contents
+			item_text += " [item:name]%count%<br>"
+			if (istype(item, /obj/storage) || istype(item, /obj/item/storage))
+				contents = get_item_text_helper(item:contents, item:spawn_contents, depth)
 
 		for(var/text in contents)
 			item_text += replacetext(text, "%count%", (( contents[text] > 1) ? " x[contents[text]]" : ""))
