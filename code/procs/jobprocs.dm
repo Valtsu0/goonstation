@@ -704,9 +704,10 @@ Equip items from body traits.
 	else if (src.traitHolder && src.traitHolder.hasTrait("allergic"))
 		trinket = new/obj/item/reagent_containers/emergency_injector/epinephrine(src)
 	else if (src.traitHolder && src.traitHolder.hasTrait("wheelchair"))
-		var/obj/stool/chair/comfy/wheelchair/the_chair = new /obj/stool/chair/comfy/wheelchair(get_turf(src))
-		trinket = the_chair
-		the_chair.buckle_in(src, src)
+		SPAWN(0) // Ensures wheelchair spawns with you even if you aren't latejoining at arrivals.
+			var/obj/stool/chair/comfy/wheelchair/the_chair = new /obj/stool/chair/comfy/wheelchair(get_turf(src))
+			trinket = the_chair
+			the_chair.buckle_in(src, src)
 	else
 		trinket = new T(src)
 
@@ -783,7 +784,7 @@ Equip items from body traits.
 
 		C.registered = realName
 		C.assignment = JOB.name
-		C.name = "[C.registered]'s ID Card ([C.assignment])"
+		C.name = "[C.registered]’s ID Card ([C.assignment])"
 		C.access = JOB.access.Copy()
 		C.pronouns = src.get_pronouns()
 
